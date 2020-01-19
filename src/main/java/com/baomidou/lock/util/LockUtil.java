@@ -18,6 +18,7 @@ package com.baomidou.lock.util;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.Enumeration;
 
 /**
  * 分布式锁工具类
@@ -33,25 +34,55 @@ public class LockUtil {
      * @return macAddress
      */
     public static String getLocalMAC() {
+//        try {
+////            InetAddress ia = InetAddress.getLocalHost();
+////            // 获得网络接口对象（即网卡），并得到mac地址，mac地址存在于一个byte数组中。
+////            byte[] mac = NetworkInterface.getByInetAddress(ia).getHardwareAddress();
+////            // 下面代码是把mac地址拼装成String
+////            StringBuffer sb = new StringBuffer();
+////            for (int i = 0; i < mac.length; i++) {
+////                if (i != 0) {
+////                    sb.append("-");
+////                }
+////                // mac[i] & 0xFF 是为了把byte转化为正整数
+////                String s = Integer.toHexString(mac[i] & 0xFF);
+////                sb.append(s.length() == 1 ? 0 + s : s);
+////            }
+////            // 把字符串所有小写字母改为大写成为正规的mac地址并返回
+////            return sb.toString().toUpperCase().replaceAll("-", "");
+////        } catch (Exception e) {
+////            throw new IllegalStateException("getLocalMAC error");
+////        }
+        return getMacAddress();
+    }
+
+    public static String getMacAddress() {
         try {
-            InetAddress ia = InetAddress.getLocalHost();
-            // 获得网络接口对象（即网卡），并得到mac地址，mac地址存在于一个byte数组中。
-            byte[] mac = NetworkInterface.getByInetAddress(ia).getHardwareAddress();
-            // 下面代码是把mac地址拼装成String
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < mac.length; i++) {
-                if (i != 0) {
-                    sb.append("-");
+            Enumeration<NetworkInterface> allNetInterfaces = NetworkInterface.getNetworkInterfaces();
+            byte[] mac = null;
+            while (allNetInterfaces.hasMoreElements()) {
+                NetworkInterface netInterface = allNetInterfaces.nextElement();
+                if (netInterface.isLoopback() || netInterface.isVirtual() || !netInterface.isUp()) {
+                    continue;
+                } else {
+                    mac = netInterface.getHardwareAddress();
+                    if (mac != null) {
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < mac.length; i++) {
+                            sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+                        }
+                        if (sb.length() > 0) {
+
+                            return sb.toString();
+                        }
+                    }
                 }
-                // mac[i] & 0xFF 是为了把byte转化为正整数
-                String s = Integer.toHexString(mac[i] & 0xFF);
-                sb.append(s.length() == 1 ? 0 + s : s);
             }
-            // 把字符串所有小写字母改为大写成为正规的mac地址并返回
-            return sb.toString().toUpperCase().replaceAll("-", "");
         } catch (Exception e) {
-            throw new IllegalStateException("getLocalMAC error");
+// _logger.error("MAC地址获取失败", e);
+            e.printStackTrace();
         }
+        return "";
     }
 
     /**
