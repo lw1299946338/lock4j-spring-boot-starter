@@ -24,6 +24,10 @@ package com.baomidou.lock;
  */
 public interface LockExecutor {
 
+    default boolean renewal() {
+        return false;
+    }
+    
     /**
      * 加锁
      *
